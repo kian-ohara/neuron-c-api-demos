@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <cassert>
 #include "../neuron_api_headers.h"
 
 using std::cout;
@@ -63,18 +64,18 @@ int main(void) {
     char* error;
     Symbol* sym;
     Symbol* sym2;
-    void* handle = dlopen("libnrniv.dylib", RTLD_NOW | RTLD_LOCAL); 
+    void* handle = dlopen("libnrniv.so", RTLD_NOW | RTLD_LOCAL );
     if (!handle) {
-        cout << "Couldn't open dylib." << endl << dlerror() << endl;
+        cout << "Couldn't open shared object." << endl << dlerror() << endl;
         exit(-1);
     } else {
-        cout << "Opened dylib" << endl;
+        cout << "Opened shared object" << endl;
     }
 
     /***************************
-     * 
+     *
      * A bunch of functions in NEURON we'll want to be able to call
-     * 
+     *
      **************************/
 
     // just using hoc_last_init alone is insufficient, which is too bad because it isn't mangled
@@ -151,9 +152,9 @@ int main(void) {
     assert(mech_insert1);
 
     /***************************
-     * 
+     *
      * Miscellaneous initialization
-     * 
+     *
      **************************/
 
     // commenting out the following line shows the banner
@@ -165,8 +166,8 @@ int main(void) {
         nrnmpi_stubs();
     }
 
-    ivocmain(3, argv, NULL, 0);
-
+    ivocmain(3, argv, NULL, 0); // This causes the segmentation fault
+    return 0;
 
     auto hoc_built_in_symlist = (Symlist**) dlsym(handle, "hoc_built_in_symlist");
     assert(hoc_built_in_symlist);
@@ -218,7 +219,7 @@ int main(void) {
         "create soma\n"
     );
 
-    cout << endl << "created the soma via hoc; now lets look at topology:" << endl;    
+    cout << endl << "created the soma via hoc; now lets look at topology:" << endl;
 
     /***************************
      * lookup a symbol and call the corresponding function with 0 arguments
@@ -252,10 +253,10 @@ int main(void) {
     // the symbol type could be used to tell that it's a rangevar
     // cout << "v->type: " << hoc_lookup("v")->type << endl;
     // but we know that v is a rangevar
-    cout << "t = " << *(hoc_lookup("t")->u.pval) << "  " 
-         << "axon(0.5).v = " 
-         << *nrn_rangepointer(axon, hoc_lookup("v"), 0.5) 
-         << endl;    
+    cout << "t = " << *(hoc_lookup("t")->u.pval) << "  "
+         << "axon(0.5).v = "
+         << *nrn_rangepointer(axon, hoc_lookup("v"), 0.5)
+         << endl;
 
     /***************************
      * lookup a top-level symbol and set the value (equivalent to t=1.23)
@@ -280,9 +281,9 @@ int main(void) {
     // the symbol type could be used to tell that it's a rangevar
     // cout << "v->type: " << hoc_lookup("v")->type << endl;
     // but we know that v is a rangevar
-    cout << "t = " << *(hoc_lookup("t")->u.pval) << "  " 
-         << "axon(0.5).v = " 
-         << *nrn_rangepointer(axon, hoc_lookup("v"), 0.5) 
+    cout << "t = " << *(hoc_lookup("t")->u.pval) << "  "
+         << "axon(0.5).v = "
+         << *nrn_rangepointer(axon, hoc_lookup("v"), 0.5)
          << endl;
 
 
@@ -341,11 +342,11 @@ int main(void) {
 
     // finitialize(-65)
     hoc_pushx(-65);
-    hoc_call_func(hoc_lookup("finitialize"), 1);   
+    hoc_call_func(hoc_lookup("finitialize"), 1);
 
     // do a bunch of fadvances
     for(auto i = 0; i < 100; i++) {
-        hoc_call_func(hoc_lookup("fadvance"), 0);   
+        hoc_call_func(hoc_lookup("fadvance"), 0);
     }
 
     // now print out the recorded time points
